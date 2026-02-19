@@ -150,6 +150,14 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .empty-state { text-align:center; padding:40px 20px; color:var(--text-dim); }
 .empty-state .empty-icon { font-size:48px; margin-bottom:12px; display:block; }
 .empty-state p { font-size:14px; }
+.backup-banner { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid rgba(44,180,160,0.3); border-radius:14px; padding:12px 14px; margin-bottom:12px; }
+.backup-text { display:flex; align-items:center; gap:10px; }
+.backup-icon { font-size:22px; }
+.backup-title { font-size:13px; font-weight:700; }
+.backup-sub { font-size:10px; color:var(--text-dim); margin-top:1px; }
+.backup-actions { display:flex; align-items:center; gap:8px; }
+.backup-btn { background:var(--yoga); border:none; color:var(--bg); padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; }
+.backup-dismiss { background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:4px; }
 </style>
 </head>
 <body>
@@ -171,6 +179,21 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       </div>
       <div class="section-title">WEEKLY GOALS</div>
       <div id="weeklyGoals"></div>
+      <!-- Backup Banner -->
+      <div class="backup-banner" id="backupBanner" style="display:none">
+        <div class="backup-text">
+          <span class="backup-icon">💾</span>
+          <div>
+            <div class="backup-title">Back up your data</div>
+            <div class="backup-sub" id="backupSub">Protect your progress</div>
+          </div>
+        </div>
+        <div class="backup-actions">
+          <button class="backup-btn" onclick="quickBackup()">Backup</button>
+          <button class="backup-dismiss" onclick="dismissBackup()">✕</button>
+        </div>
+      </div>
+
       <div class="section-title">RECENT ACTIVITIES</div>
       <div id="recentList"></div>
     </div>
@@ -386,7 +409,93 @@ function handleImport(e){const f=e.target.files[0];if(!f)return;const r=new File
 function clearAllData(){if(!confirm('Delete ALL data? Cannot be undone!'))return;data={activities:[],unlockedAchievements:[],bestStreak:0};saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();showToast('All data cleared')}
 
 renderRecent();renderStreakWeek();renderWeeklyGoals();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// ─── BACKUP SYSTEM ───
+const BACKUP_KEY='reach_last_backup';
+
+// Auto-backup to a second localStorage key every time data is saved
+function autoBackup(){
+  if(!data.activities.length)return;
+  try{localStorage.setItem('reach_backup_auto',JSON.stringify(data))}catch(e){}
+}
+autoBackup();
+
+// Restore from auto-backup if main data is empty but backup exists
+(function checkAutoRestore(){
+  if(data.activities.length===0){
+    try{
+      const backup=localStorage.getItem('reach_backup_auto');
+      if(backup){
+        const parsed=JSON.parse(backup);
+        if(parsed.activities&&parsed.activities.length>0){
+          if(confirm('Found a backup with '+parsed.activities.length+' activities. Restore it?')){
+            data=parsed;saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();
+            showToast('Restored '+data.activities.length+' activities from backup!');
+          }
+        }
+      }
+    }catch(e){}
+  }
+})();
+
+// Check if we should show the backup reminder banner
+function checkBackupReminder(){
+  const banner=document.getElementById('backupBanner');
+  if(!data.activities.length){banner.style.display='none';return}
+  const lb=localStorage.getItem(BACKUP_KEY);
+  if(!lb){
+    document.getElementById('backupSub').textContent=data.activities.length+' activities — never backed up to file!';
+    banner.style.display='flex';return;
+  }
+  try{
+    const info=JSON.parse(lb);
+    const newSince=data.activities.length-(info.count||0);
+    const daysSince=Math.floor((Date.now()-new Date(info.time).getTime())/864e5);
+    if(newSince>=5||daysSince>=7){
+      document.getElementById('backupSub').textContent=newSince>0?newSince+' new activities since last backup':'Last backup '+daysSince+' days ago';
+      banner.style.display='flex';
+    }else{banner.style.display='none'}
+  }catch(e){banner.style.display='flex'}
+}
+
+function quickBackup(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download='reach-backup-'+toDateStr(new Date())+'.json';link.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem(BACKUP_KEY,JSON.stringify({time:new Date().toISOString(),count:data.activities.length}));
+  document.getElementById('backupBanner').style.display='none';
+  showToast('✅ Backup saved! Keep the file safe.');
+}
+
+function dismissBackup(){document.getElementById('backupBanner').style.display='none'}
+
+checkBackupReminder();
+
+// Also auto-backup before every save
+const origSaveStore=saveStore;
+saveStore=function(d){origSaveStore(d);autoBackup()};
+
+// ─── SERVICE WORKER (auto-update, no cache clearing needed) ───
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    reg.update();
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+          try{localStorage.setItem('reach_backup_auto',JSON.stringify(data))}catch(e){}
+          newWorker.postMessage('skipWaiting');
+        }
+      });
+    });
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!refreshing){refreshing=true;window.location.reload()}
+    });
+  }).catch(()=>{});
+}
 </script>
 </body>
 </html>
