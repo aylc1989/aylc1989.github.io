@@ -106,4 +106,3 @@ A gamified workout tracking app built as a Progressive Web App (PWA) that instal
 | `icon-512.png` | App icon (512×512) |
 
 All data is stored locally on your device using localStorage. No server, no account needed.
-# workouttracker

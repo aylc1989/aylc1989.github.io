@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grind-v1';
+const CACHE_NAME = 'reach-v2';
 const ASSETS = [
   '/',
   '/index.html',
