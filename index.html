@@ -93,11 +93,22 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .stat-label { font-size:11px; color:var(--text-dim); font-weight:600; margin-top:4px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; justify-content:center; gap:4px; }
 .stat-label .stat-icon { font-size:13px; }
 .donut-container { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
-.donut-chart { flex-shrink:0; }
+.donut-chart { flex-shrink:0; cursor:pointer; }
+.donut-chart circle.segment { transition:stroke-width .3s, opacity .3s, filter .3s; cursor:pointer; }
+.donut-chart circle.segment:hover { stroke-width:22; }
+.donut-chart.has-selection circle.segment { opacity:0.3; }
+.donut-chart.has-selection circle.segment.active { opacity:1; stroke-width:22; filter:drop-shadow(0 0 6px currentColor); }
 .donut-legend { flex:1; }
-.donut-legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; font-weight:600; }
-.donut-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.donut-legend-item { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; font-weight:600; cursor:pointer; padding:4px 8px; border-radius:8px; transition:all .2s; }
+.donut-legend-item:active { transform:scale(.97); }
+.donut-legend-item.active { background:var(--surface2); }
+.donut-legend-item.dimmed { opacity:0.35; }
+.donut-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; transition:transform .2s; }
+.donut-legend-item.active .donut-legend-dot { transform:scale(1.4); }
 .donut-legend-count { margin-left:auto; color:var(--text-dim); font-size:12px; }
+.donut-detail { text-align:center; margin-top:8px; padding:10px 14px; background:var(--surface); border-radius:12px; font-size:13px; color:var(--text-dim); animation:fadeIn .2s ease; }
+.donut-detail strong { color:var(--text); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
 .focus-card { flex:1; background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center; }
 .focus-number { font-family:'Bebas Neue',sans-serif; font-size:36px; line-height:1; color:var(--wellness); }
 .focus-label { font-size:11px; color:var(--text-dim); font-weight:600; margin-top:4px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; justify-content:center; gap:4px; }
@@ -318,7 +329,7 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       </div>
       <div class="stat-row" style="margin-bottom:16px">
         <div class="stat-card"><div class="focus-number" id="balCardio">0</div><div class="focus-label"><span class="stat-icon">🏃</span> Cardio</div></div>
-        <div class="stat-card"><div class="focus-number" id="balWellness">0</div><div class="focus-label"><span class="stat-icon">🧘</span> Wellness</div></div>
+        <div class="stat-card"><div class="focus-number" id="balWellness">0</div><div class="focus-label"><span class="stat-icon">🧘</span> Stretch/Wellness</div></div>
       </div>
     </div>
 
@@ -864,15 +875,60 @@ if(catData.length===0){
     const pct=d.count/total;
     const dash=pct*circ;
     const gap=circ-dash;
-    segments+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.cat.color}" stroke-width="${sw}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" stroke-linecap="round" style="transition:stroke-dasharray .6s,stroke-dashoffset .6s"/>`;
+    segments+=`<circle class="segment" data-cat="${d.key}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.cat.color}" stroke-width="${sw}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" stroke-linecap="round" style="transition:stroke-dasharray .6s,stroke-dashoffset .6s"/>`;
     offset+=dash;
   });
 }
-const centerText=`<text x="${cx}" y="${cy-4}" text-anchor="middle" fill="var(--wellness)" font-family="Bebas Neue" font-size="28">${f.length}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" fill="var(--text-dim)" font-family="DM Sans" font-size="10" font-weight="600">TOTAL</text>`;
-const svg=`<svg class="donut-chart" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)"><g>${segments}</g><g style="transform:rotate(90deg);transform-origin:center">${centerText}</g></svg>`;
-const legend=entries.map(([k,c])=>{const cnt=cc[k]||0;return`<div class="donut-legend-item"><span class="donut-legend-dot" style="background:${c.color}"></span>${c.icon} ${c.label}<span class="donut-legend-count">${cnt}</span></div>`}).join('');
-document.getElementById('breakdownContainer').innerHTML=`<div class="donut-container">${svg}<div class="donut-legend">${legend}</div></div>`;
+const centerText=`<text x="${cx}" y="${cy-4}" text-anchor="middle" fill="var(--wellness)" font-family="Bebas Neue" font-size="28" id="donutCenter">${f.length}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" fill="var(--text-dim)" font-family="DM Sans" font-size="10" font-weight="600" id="donutLabel">TOTAL</text>`;
+const svg=`<svg class="donut-chart" id="donutSvg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)"><g>${segments}</g><g style="transform:rotate(90deg);transform-origin:center">${centerText}</g></svg>`;
+const legend=entries.map(([k,c])=>{const cnt=cc[k]||0;return`<div class="donut-legend-item" data-cat="${k}" onclick="highlightDonut('${k}')"><span class="donut-legend-dot" style="background:${c.color}"></span>${c.icon} ${c.label}<span class="donut-legend-count">${cnt}</span></div>`}).join('');
+document.getElementById('breakdownContainer').innerHTML=`<div class="donut-container">${svg}<div class="donut-legend">${legend}</div></div><div id="donutDetail"></div>`;
+// Add click handlers to SVG segments
+document.querySelectorAll('#donutSvg .segment').forEach(seg=>{
+  seg.addEventListener('click',()=>highlightDonut(seg.dataset.cat));
+});
 document.getElementById('balUpper').textContent=f.filter(a=>a.category==='weights-upper').length;document.getElementById('balLower').textContent=f.filter(a=>a.category==='weights-lower').length;document.getElementById('balCardio').textContent=f.filter(a=>a.category==='cardio').length;document.getElementById('balWellness').textContent=f.filter(a=>['yoga','wellness'].includes(a.category)).length}
+
+let activeDonutCat=null;
+function highlightDonut(cat){
+  const svg=document.getElementById('donutSvg');
+  const items=document.querySelectorAll('.donut-legend-item');
+  const detail=document.getElementById('donutDetail');
+  const centerNum=document.getElementById('donutCenter');
+  const centerLabel=document.getElementById('donutLabel');
+  if(!svg)return;
+  // Toggle off if same category clicked
+  if(activeDonutCat===cat){activeDonutCat=null;svg.classList.remove('has-selection');
+    svg.querySelectorAll('.segment').forEach(s=>s.classList.remove('active'));
+    items.forEach(i=>{i.classList.remove('active','dimmed')});
+    const f=getFilteredActivities();
+    centerNum.textContent=f.length;centerLabel.textContent='TOTAL';
+    detail.innerHTML='';return;
+  }
+  activeDonutCat=cat;
+  const c=CATEGORIES[cat];if(!c)return;
+  const f=getFilteredActivities();
+  const catActs=f.filter(a=>a.category===cat);
+  const cnt=catActs.length;
+  const mins=catActs.reduce((s,a)=>s+a.duration,0);
+  // Highlight SVG
+  svg.classList.add('has-selection');
+  svg.querySelectorAll('.segment').forEach(s=>{
+    if(s.dataset.cat===cat)s.classList.add('active');else s.classList.remove('active');
+  });
+  // Highlight legend
+  items.forEach(i=>{
+    if(i.dataset.cat===cat){i.classList.add('active');i.classList.remove('dimmed')}
+    else{i.classList.remove('active');i.classList.add('dimmed')}
+  });
+  // Update center text
+  centerNum.textContent=cnt;
+  centerLabel.textContent=c.label.toUpperCase();
+  // Show detail card
+  const pct=f.length?Math.round(cnt/f.length*100):0;
+  const avgDur=cnt?Math.round(mins/cnt):0;
+  detail.innerHTML=`<div class="donut-detail">${c.icon} <strong>${c.label}</strong> — ${cnt} session${cnt!==1?'s':''} · ${mins} min total · ${avgDur} min avg · ${pct}% of workouts</div>`;
+}
 
 function renderAchievements(){const xp=getTotalXP(data);const l=getLevel(xp);document.getElementById('levelName').textContent=`Level ${l.level} — ${l.name}`;document.getElementById('levelXP').textContent=`${l.currentXP} / ${l.neededXP} XP`;document.getElementById('levelBar').style.width=(l.progress*100)+'%';const cnt=data.activities.length;let th='';MILESTONES.forEach((m,i)=>{const r=cnt>=m;if(i>0)th+=`<div class="milestone-line ${cnt>=m?'filled':''}"></div>`;th+=`<div class="milestone-node ${r?'reached':''}">${r?'✓':m}</div>`});document.getElementById('milestoneTrack').innerHTML=th;document.getElementById('achievementsGrid').innerHTML=ACHIEVEMENTS.map(a=>{const u=data.unlockedAchievements.includes(a.id);return`<div class="achievement ${u?'unlocked':'locked'}"><span class="badge-icon">${a.icon}</span><div class="badge-name">${a.name}</div><div class="badge-desc">${a.desc}</div></div>`}).join('')}
 
