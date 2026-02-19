@@ -153,12 +153,12 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .modal-overlay.closing { background:rgba(0,0,0,0); }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 @keyframes slideDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
-.modal { background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:500px; max-height:85dvh; overflow-y:auto; padding:24px 20px calc(40px + env(safe-area-inset-bottom, 0px)); animation:slideUp .3s cubic-bezier(.2,.9,.3,1); will-change:transform; touch-action:pan-y; }
+.modal { background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:500px; max-height:85dvh; overflow-y:auto; padding:12px 20px calc(40px + env(safe-area-inset-bottom, 0px)); animation:slideUp .3s cubic-bezier(.2,.9,.3,1); will-change:transform; touch-action:pan-y; }
 .modal.closing { animation:slideDown .25s cubic-bezier(.4,0,1,1) forwards; }
 .modal.dragging { animation:none !important; transition:none !important; }
-.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 16px; cursor:grab; padding:12px 0; background-clip:content-box; }
-.modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px; margin-bottom:6px; }
-.modal-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:16px; }
+.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 10px; cursor:grab; padding:8px 0; background-clip:content-box; }
+.modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px; margin-bottom:4px; }
+.modal-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:12px; }
 .modal-categories { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:20px; }
 .modal-cat { background:var(--surface2); border:2px solid transparent; border-radius:12px; padding:10px 6px; cursor:pointer; text-align:center; transition:all .2s; font-family:inherit; color:var(--text); font-size:11px; font-weight:600; }
 .modal-cat:active { transform:scale(.96); }
@@ -545,7 +545,7 @@ function getLevel(xp){let l=0;for(let i=LEVELS.length-1;i>=0;i--)if(xp>=LEVELS[i
 let toastTimeout=null;
 function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type==='achievement'?' achievement-toast':'');clearTimeout(toastTimeout);requestAnimationFrame(()=>{t.classList.add('show');toastTimeout=setTimeout(()=>t.classList.remove('show'),3000)})}
 
-function switchView(id,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('viewContainer').scrollTop=0;if(id==='calendarView')renderCalendar();if(id==='statsView')renderStats();if(id==='achieveView')renderAchievements();if(id==='homeView'){renderStreakWeek();renderWeeklyGoals()}if(id==='settingsView'){updateThemeUI();updateAutoLogUI()}}
+function switchView(id,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('viewContainer').scrollTop=0;if(id==='calendarView'){selectedCalDate=toDateStr(new Date());renderCalendar();showDay(selectedCalDate)};if(id==='statsView')renderStats();if(id==='achieveView')renderAchievements();if(id==='homeView'){renderStreakWeek();renderWeeklyGoals()}if(id==='settingsView'){updateThemeUI();updateAutoLogUI()}}
 
 function renderStreakWeek(){const c=document.getElementById('streakWeek');const labels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const today=new Date();const sow=new Date(today);sow.setDate(today.getDate()-today.getDay());const ad=new Set(data.activities.map(a=>dateKey(a.date)));let h='';for(let i=0;i<7;i++){const d=new Date(sow);d.setDate(sow.getDate()+i);const ds=toDateStr(d);const done=ad.has(ds);const isT=ds===toDateStr(today);const isF=d>today;h+=`<div class="streak-day"><div class="streak-day-label">${labels[i]}</div><div class="streak-dot ${done?'done':''}" style="${isT&&!done?'border:2px solid var(--accent)':''}">${done?'✓':isF?'':'·'}</div></div>`}c.innerHTML=h}
 
