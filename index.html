@@ -128,7 +128,7 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .modal { background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:500px; max-height:85dvh; overflow-y:auto; padding:24px 20px 40px; animation:slideUp .3s cubic-bezier(.2,.9,.3,1); will-change:transform; touch-action:pan-y; }
 .modal.closing { animation:slideDown .25s cubic-bezier(.4,0,1,1) forwards; }
 .modal.dragging { animation:none !important; transition:none !important; }
-.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 20px; cursor:grab; padding:10px 0; background-clip:content-box; }
+.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 16px; cursor:grab; padding:12px 0; background-clip:content-box; }
 .modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px; margin-bottom:6px; }
 .modal-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:16px; }
 .modal-categories { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
@@ -646,12 +646,16 @@ function closeLogModal(){
 (function(){
   const overlay=document.getElementById('logModal');
   const modal=overlay.querySelector('.modal');
-  const handle=modal.querySelector('.modal-handle');
   let startY=0,currentY=0,isDragging=false;
 
-  // Only start drag from the handle area
-  handle.addEventListener('touchstart',function(e){
+  // Start drag from anywhere on the modal when scrolled to top
+  modal.addEventListener('touchstart',function(e){
+    // Only allow drag when scrolled to top
+    if(modal.scrollTop>2)return;
     const touch=e.touches[0];
+    // Only start from top 80px of the modal
+    const rect=modal.getBoundingClientRect();
+    if(touch.clientY - rect.top > 80) return;
     startY=touch.clientY;currentY=startY;isDragging=true;
     modal.classList.add('dragging');
   },{passive:true});
@@ -661,10 +665,12 @@ function closeLogModal(){
     const touch=e.touches[0];
     currentY=touch.clientY;
     const dy=Math.max(0,currentY-startY);
-    modal.style.transform=`translateY(${dy}px)`;
-    const opacity=Math.max(0,0.7-(dy/500));
-    overlay.style.background=`rgba(0,0,0,${opacity})`;
-    if(dy>5)e.preventDefault();
+    if(dy>5){
+      modal.style.transform=`translateY(${dy}px)`;
+      const opacity=Math.max(0,0.7-(dy/500));
+      overlay.style.background=`rgba(0,0,0,${opacity})`;
+      e.preventDefault();
+    }
   },{passive:false});
 
   modal.addEventListener('touchend',function(){
@@ -677,15 +683,17 @@ function closeLogModal(){
   },{passive:true});
 
   // Swipe back (right swipe) to dismiss
-  let swipeStartX=0,swipeStartY=0;
+  let swipeStartX=0,swipeStartY=0,swipeStartTime=0;
   overlay.addEventListener('touchstart',e=>{
-    const t=e.touches[0];swipeStartX=t.clientX;swipeStartY=t.clientY;
+    const t=e.touches[0];swipeStartX=t.clientX;swipeStartY=t.clientY;swipeStartTime=Date.now();
   },{passive:true});
   overlay.addEventListener('touchend',e=>{
     const t=e.changedTouches[0];
     const dx=t.clientX-swipeStartX;
     const dy=Math.abs(t.clientY-swipeStartY);
-    if(dx>80&&dy<100)closeLogModal();
+    const elapsed=Date.now()-swipeStartTime;
+    // Fast horizontal swipe
+    if(dx>60&&dy<80&&elapsed<400)closeLogModal();
   },{passive:true});
 })();
 function toggleCat(el){const cat=el.dataset.cat;if(el.classList.contains('selected')){el.classList.remove('selected');selectedCats=selectedCats.filter(c=>c!==cat)}else{el.classList.add('selected');selectedCats.push(cat)}updateCatInfo();validateForm()}
