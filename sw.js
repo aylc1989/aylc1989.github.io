@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reach-v3';
+const CACHE_NAME = 'reach-v4';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -31,7 +31,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
           return response;
         })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('/index.html')))
+        .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
     );
     return;
   }
@@ -60,6 +60,6 @@ self.addEventListener('fetch', e => {
         }
         return response;
       });
-    }).catch(() => caches.match('/index.html'))
+    }).catch(() => caches.match('./index.html'))
   );
 });
