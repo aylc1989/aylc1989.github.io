@@ -646,37 +646,35 @@ function closeLogModal(){
 (function(){
   const overlay=document.getElementById('logModal');
   const modal=overlay.querySelector('.modal');
+  const handle=modal.querySelector('.modal-handle');
   let startY=0,currentY=0,isDragging=false;
 
-  function onStart(e){
-    // Only drag if at scroll top or touching the handle
-    if(modal.scrollTop>5)return;
-    const touch=e.touches?e.touches[0]:e;
+  // Only start drag from the handle area
+  handle.addEventListener('touchstart',function(e){
+    const touch=e.touches[0];
     startY=touch.clientY;currentY=startY;isDragging=true;
     modal.classList.add('dragging');
-  }
-  function onMove(e){
+  },{passive:true});
+
+  modal.addEventListener('touchmove',function(e){
     if(!isDragging)return;
-    const touch=e.touches?e.touches[0]:e;
+    const touch=e.touches[0];
     currentY=touch.clientY;
     const dy=Math.max(0,currentY-startY);
     modal.style.transform=`translateY(${dy}px)`;
     const opacity=Math.max(0,0.7-(dy/500));
     overlay.style.background=`rgba(0,0,0,${opacity})`;
-    if(dy>10)e.preventDefault();
-  }
-  function onEnd(){
+    if(dy>5)e.preventDefault();
+  },{passive:false});
+
+  modal.addEventListener('touchend',function(){
     if(!isDragging)return;
     isDragging=false;
     modal.classList.remove('dragging');
     const dy=currentY-startY;
-    if(dy>120){closeLogModal()}
+    if(dy>100){closeLogModal()}
     else{modal.style.transform='';overlay.style.background=''}
-  }
-
-  modal.addEventListener('touchstart',onStart,{passive:true});
-  modal.addEventListener('touchmove',onMove,{passive:false});
-  modal.addEventListener('touchend',onEnd,{passive:true});
+  },{passive:true});
 
   // Swipe back (right swipe) to dismiss
   let swipeStartX=0,swipeStartY=0;
