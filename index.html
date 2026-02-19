@@ -92,12 +92,12 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .stat-number { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:1; color:var(--wellness); }
 .stat-label { font-size:10px; color:var(--text-dim); font-weight:600; margin-top:3px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; justify-content:center; gap:4px; }
 .stat-label .stat-icon { font-size:13px; }
-.donut-container { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.donut-container { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
 .donut-chart { flex-shrink:0; cursor:pointer; }
 .donut-chart circle.segment { transition:stroke-width .3s, opacity .3s, filter .3s; cursor:pointer; }
-.donut-chart circle.segment:hover { stroke-width:22; }
+.donut-chart circle.segment:hover { stroke-width:28; }
 .donut-chart.has-selection circle.segment { opacity:0.3; }
-.donut-chart.has-selection circle.segment.active { opacity:1; stroke-width:22; filter:drop-shadow(0 0 6px currentColor); }
+.donut-chart.has-selection circle.segment.active { opacity:1; stroke-width:28; filter:drop-shadow(0 0 6px currentColor); }
 .donut-legend { flex:1; }
 .donut-legend-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:12px; font-weight:600; cursor:pointer; padding:3px 6px; border-radius:8px; transition:all .2s; }
 .donut-legend-item:active { transform:scale(.97); }
@@ -864,7 +864,7 @@ function renderStats(){const f=getFilteredActivities();const tm=f.reduce((s,a)=>
 // Donut chart
 const cc={};Object.keys(CATEGORIES).forEach(k=>cc[k]=0);f.forEach(a=>cc[a.category]=(cc[a.category]||0)+1);
 const total=f.length||1;const entries=Object.entries(CATEGORIES);
-const size=120,cx=size/2,cy=size/2,r=44,sw=16;
+const size=170,cx=size/2,cy=size/2,r=64,sw=22;
 let segments='';let offset=0;
 const catData=entries.map(([k,c])=>({key:k,cat:c,count:cc[k]||0})).filter(d=>d.count>0);
 if(catData.length===0){
@@ -879,7 +879,7 @@ if(catData.length===0){
     offset+=dash;
   });
 }
-const centerText=`<text x="${cx}" y="${cy-3}" text-anchor="middle" fill="var(--wellness)" font-family="Bebas Neue" font-size="24" id="donutCenter">${f.length}</text><text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--text-dim)" font-family="DM Sans" font-size="9" font-weight="600" id="donutLabel">TOTAL</text>`;
+const centerText=`<text x="${cx}" y="${cy-4}" text-anchor="middle" fill="var(--wellness)" font-family="Bebas Neue" font-size="34" id="donutCenter">${f.length}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" fill="var(--text-dim)" font-family="DM Sans" font-size="11" font-weight="600" id="donutLabel">TOTAL</text>`;
 const svg=`<svg class="donut-chart" id="donutSvg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)"><g>${segments}</g><g style="transform:rotate(90deg);transform-origin:center">${centerText}</g></svg>`;
 const legend=entries.map(([k,c])=>{const cnt=cc[k]||0;return`<div class="donut-legend-item" data-cat="${k}" onclick="highlightDonut('${k}')"><span class="donut-legend-dot" style="background:${c.color}"></span>${c.icon} ${c.label}<span class="donut-legend-count">${cnt}</span></div>`}).join('');
 document.getElementById('breakdownContainer').innerHTML=`<div class="donut-container">${svg}<div class="donut-legend">${legend}</div></div><div id="donutDetail"></div>`;
