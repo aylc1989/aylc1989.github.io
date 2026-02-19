@@ -83,24 +83,42 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .level-xp { font-size:12px; color:var(--text-dim); }
 .level-bar-bg { height:10px; background:var(--surface3); border-radius:5px; overflow:hidden; }
 .level-bar-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .8s cubic-bezier(.4,0,.2,1); box-shadow:0 0 12px var(--accent-glow); }
-.goal-card { background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:10px; }
+.goal-card { background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:10px; position:relative; }
 .goal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-.goal-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.goal-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; flex:1; }
 .goal-progress-text { font-size:12px; color:var(--text-dim); font-weight:600; }
+.goal-del { background:none; border:none; color:var(--text-dim); font-size:14px; cursor:pointer; padding:2px 6px; margin-left:8px; }
 .goal-bar-bg { height:8px; background:var(--surface3); border-radius:4px; overflow:hidden; }
 .goal-bar-fill { height:100%; border-radius:4px; transition:width .6s ease; }
 .goal-reward { font-size:11px; color:var(--wellness); margin-top:6px; font-weight:600; }
+.section-title-row { display:flex; justify-content:space-between; align-items:center; margin:16px 0 10px; }
+.section-title-row .section-title { margin:0; }
+.add-goal-btn { background:var(--surface2); border:1px solid var(--surface3); color:var(--accent); width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; font-weight:700; }
+.goal-type-picker { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.goal-type-opt { background:var(--surface2); border:2px solid transparent; border-radius:12px; padding:14px; cursor:pointer; transition:all .2s; font-family:inherit; color:var(--text); text-align:left; }
+.goal-type-opt:active { transform:scale(.97); }
+.goal-type-opt.selected { border-color:var(--accent); background:rgba(255,255,255,0.05); }
+.goal-type-opt .gto-title { font-size:14px; font-weight:700; margin-bottom:2px; }
+.goal-type-opt .gto-desc { font-size:11px; color:var(--text-dim); }
+.goal-config { display:none; margin-bottom:16px; }
+.goal-config.show { display:block; }
+.goal-config-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.goal-config-row .form-input { flex:1; }
+.goal-config-row select { flex:1; background:var(--surface2); border:1px solid var(--surface3); border-radius:12px; padding:12px 16px; color:var(--text); font-size:15px; font-family:inherit; outline:none; -webkit-appearance:none; }
 .streak-week { display:flex; gap:6px; margin-bottom:16px; }
 .streak-day { flex:1; text-align:center; }
 .streak-day-label { font-size:10px; color:var(--text-dim); margin-bottom:4px; font-weight:600; }
 .streak-dot { width:28px; height:28px; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:14px; background:var(--surface2); }
 .streak-dot.done { background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 2px 10px rgba(255,94,58,0.3); }
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; display:none; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease; }
-.modal-overlay.show { display:flex; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0); z-index:100; display:none; align-items:flex-end; justify-content:center; transition:background .3s ease; }
+.modal-overlay.show { display:flex; background:rgba(0,0,0,0.7); }
+.modal-overlay.closing { background:rgba(0,0,0,0); }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.modal { background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:500px; max-height:85dvh; overflow-y:auto; padding:24px 20px 40px; animation:slideUp .3s ease; }
-.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 20px; }
+@keyframes slideDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
+.modal { background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:500px; max-height:85dvh; overflow-y:auto; padding:24px 20px 40px; animation:slideUp .3s cubic-bezier(.2,.9,.3,1); will-change:transform; touch-action:pan-y; }
+.modal.closing { animation:slideDown .25s cubic-bezier(.4,0,1,1) forwards; }
+.modal.dragging { animation:none !important; transition:none !important; }
+.modal-handle { width:40px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 20px; cursor:grab; padding:10px 0; background-clip:content-box; }
 .modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px; margin-bottom:6px; }
 .modal-subtitle { font-size:12px; color:var(--text-dim); margin-bottom:16px; }
 .modal-categories { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
@@ -121,7 +139,8 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .btn-save { width:100%; padding:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:14px; color:white; font-size:16px; font-weight:700; font-family:inherit; cursor:pointer; letter-spacing:1px; box-shadow:0 4px 20px rgba(255,94,58,0.3); transition:transform .2s,opacity .2s; }
 .btn-save:active { transform:scale(.97); }
 .btn-save:disabled { opacity:.4; }
-.recent-item { display:flex; align-items:center; gap:12px; background:var(--surface); border-radius:12px; padding:14px; margin-bottom:8px; }
+.recent-item { display:flex; align-items:center; gap:12px; background:var(--surface); border-radius:12px; padding:14px; margin-bottom:8px; cursor:pointer; transition:background .2s; }
+.recent-item:active { background:var(--surface2); }
 .recent-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
 .recent-info { flex:1; }
 .recent-title { font-size:14px; font-weight:600; }
@@ -139,6 +158,8 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .day-activity-name { font-weight:600; font-size:14px; }
 .day-activity-meta { font-size:11px; color:var(--text-dim); }
 .day-activity-del { background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer; padding:4px 8px; }
+.day-activity-edit { background:none; border:none; color:var(--accent); font-size:16px; cursor:pointer; padding:4px 8px; }
+.day-activity-actions { display:flex; gap:2px; flex-shrink:0; }
 .period-tabs { display:flex; background:var(--surface); border-radius:10px; padding:3px; margin-bottom:16px; }
 .period-tab { flex:1; padding:8px; border:none; background:none; color:var(--text-dim); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border-radius:8px; transition:all .2s; }
 .period-tab.active { background:var(--surface3); color:var(--text); }
@@ -177,7 +198,10 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
         <div class="category-card" style="--cat-color:var(--wellness)" onclick="openLogModal(null,'wellness')"><span class="card-icon">🧠</span><div class="card-label">Wellness</div><div class="card-sub">Meditation, recovery</div></div>
         <div class="category-card" style="--cat-color:#e0e0e0" onclick="openLogModal(null,'other')"><span class="card-icon">🎯</span><div class="card-label">Other</div><div class="card-sub">Sports, hiking, etc.</div></div>
       </div>
-      <div class="section-title">WEEKLY GOALS</div>
+      <div class="section-title-row">
+        <div class="section-title">WEEKLY GOALS</div>
+        <button class="add-goal-btn" onclick="openGoalModal()">+</button>
+      </div>
       <div id="weeklyGoals"></div>
       <!-- Backup Banner -->
       <div class="backup-banner" id="backupBanner" style="display:none">
@@ -302,6 +326,65 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
   </div>
 </div>
 
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goalModal" onclick="if(event.target===this)closeGoalModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">ADD WEEKLY GOAL</div>
+    <div class="modal-subtitle">Choose a goal type and set your target</div>
+    <div class="goal-type-picker" id="goalTypePicker">
+      <button class="goal-type-opt" data-type="category_count" onclick="selectGoalType(this)">
+        <div class="gto-title">📋 Category Sessions</div>
+        <div class="gto-desc">e.g. "Cardio 5 times this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="category_minutes" onclick="selectGoalType(this)">
+        <div class="gto-title">⏱️ Category Minutes</div>
+        <div class="gto-desc">e.g. "120 minutes of yoga this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="total_count" onclick="selectGoalType(this)">
+        <div class="gto-title">📅 Total Sessions</div>
+        <div class="gto-desc">e.g. "Work out 6 times this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="total_minutes" onclick="selectGoalType(this)">
+        <div class="gto-title">🕐 Total Minutes</div>
+        <div class="gto-desc">e.g. "200 minutes total this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="active_days" onclick="selectGoalType(this)">
+        <div class="gto-title">🔥 Active Days</div>
+        <div class="gto-desc">e.g. "Be active 5 days this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="variety" onclick="selectGoalType(this)">
+        <div class="gto-title">🌈 Category Variety</div>
+        <div class="gto-desc">e.g. "Try 4 different categories this week"</div>
+      </button>
+      <button class="goal-type-opt" data-type="weekly_xp" onclick="selectGoalType(this)">
+        <div class="gto-title">⚡ Weekly XP</div>
+        <div class="gto-desc">e.g. "Earn 100 XP this week"</div>
+      </button>
+    </div>
+    <div class="goal-config" id="goalConfigCat">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="goalCategory">
+          <option value="cardio">🏃 Cardio</option>
+          <option value="weights-upper">💪 Upper Body</option>
+          <option value="weights-lower">🦵 Lower Body</option>
+          <option value="yoga">🧘 Yoga & Stretch</option>
+          <option value="wellness">🧠 Wellness</option>
+          <option value="other">🎯 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="goal-config show" id="goalConfigTarget">
+      <div class="form-group">
+        <label class="form-label" id="goalTargetLabel">Target</label>
+        <input type="number" class="form-input" id="goalTarget" placeholder="e.g. 5" min="1" max="999">
+      </div>
+    </div>
+    <button class="btn-save" id="saveGoalBtn" onclick="saveGoal()" disabled>ADD GOAL ⚡</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -346,10 +429,10 @@ const ACHIEVEMENTS=[
 {id:'consistent',icon:'📅',name:'Consistency King',desc:'4/week for 4 weeks',check:d=>checkConsistency(d)},
 ];
 
-function loadData(){try{let r=localStorage.getItem(STORAGE_KEY);if(!r)r=localStorage.getItem('grind_data');if(r)return JSON.parse(r)}catch(e){}return{activities:[],unlockedAchievements:[],bestStreak:0}}
+function loadData(){try{let r=localStorage.getItem(STORAGE_KEY);if(!r)r=localStorage.getItem('grind_data');if(r){const d=JSON.parse(r);if(!d.customGoals)d.customGoals=[];return d}}catch(e){}return{activities:[],unlockedAchievements:[],bestStreak:0,customGoals:[]}}
 function saveStore(d){const s=getStreak(d);if(s>(d.bestStreak||0))d.bestStreak=s;localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
 
-let data=loadData();let calYear,calMonth;let selectedCats=[];let selectedDuration=null;let statsPeriod='week';let selectedCalDate=null;
+let data=loadData();let calYear,calMonth;let selectedCats=[];let selectedDuration=null;let statsPeriod='week';let selectedCalDate=null;let editingId=null;
 const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
 
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -366,16 +449,255 @@ function switchView(id,btn){document.querySelectorAll('.view').forEach(v=>v.clas
 
 function renderStreakWeek(){const c=document.getElementById('streakWeek');const labels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const today=new Date();const sow=new Date(today);sow.setDate(today.getDate()-today.getDay());const ad=new Set(data.activities.map(a=>dateKey(a.date)));let h='';for(let i=0;i<7;i++){const d=new Date(sow);d.setDate(sow.getDate()+i);const ds=toDateStr(d);const done=ad.has(ds);const isT=ds===toDateStr(today);const isF=d>today;h+=`<div class="streak-day"><div class="streak-day-label">${labels[i]}</div><div class="streak-dot ${done?'done':''}" style="${isT&&!done?'border:2px solid var(--accent)':''}">${done?'✓':isF?'':'·'}</div></div>`}c.innerHTML=h}
 
-function renderWeeklyGoals(){const c=document.getElementById('weeklyGoals');const today=new Date();const sow=new Date(today);sow.setDate(today.getDate()-today.getDay());const ws=toDateStr(sow);const wa=data.activities.filter(a=>a.date>=ws);const wd=new Set(wa.map(a=>a.date));const wm=wa.reduce((s,a)=>s+a.duration,0);const wx=wa.reduce((s,a)=>s+(a.xp||0),0);const wc=new Set(wa.map(a=>a.category));const goals=[{icon:'📅',title:'Active 4 days this week',current:wd.size,target:4,color:'var(--accent)',reward:'+20 bonus XP'},{icon:'⏱️',title:'Log 150 minutes this week',current:wm,target:150,color:'var(--yoga)',reward:'+30 bonus XP'},{icon:'🌈',title:'Try 3 different categories',current:wc.size,target:3,color:'var(--weights-upper)',reward:'+15 bonus XP'},{icon:'⚡',title:'Earn 100 XP this week',current:wx,target:100,color:'var(--wellness)',reward:'Level boost'}];c.innerHTML=goals.map(g=>{const pct=Math.min((g.current/g.target)*100,100);const done=g.current>=g.target;return`<div class="goal-card"><div class="goal-header"><div class="goal-title">${g.icon} ${g.title}</div><div class="goal-progress-text">${g.current}/${g.target}${done?' ✅':''}</div></div><div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${pct}%;background:${g.color}"></div></div>${!done?`<div class="goal-reward">🎁 ${g.reward}</div>`:''}</div>`}).join('')}
+function renderWeeklyGoals(){
+  const c=document.getElementById('weeklyGoals');
+  const today=new Date();const sow=new Date(today);sow.setDate(today.getDate()-today.getDay());const ws=toDateStr(sow);
+  const wa=data.activities.filter(a=>a.date>=ws);
+  const wd=new Set(wa.map(a=>a.date));
+  const wm=wa.reduce((s,a)=>s+a.duration,0);
+  const wx=wa.reduce((s,a)=>s+(a.xp||0),0);
+  const wc=new Set(wa.map(a=>a.category));
 
-function openLogModal(dateStr,cat){document.getElementById('logModal').classList.add('show');selectedCats=[];selectedDuration=null;document.getElementById('activityName').value='';document.getElementById('activityNotes').value='';document.getElementById('activityDate').value=dateStr||toDateStr(new Date());document.querySelectorAll('.modal-cat').forEach(c=>c.classList.remove('selected'));document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));document.getElementById('saveBtn').disabled=true;updateCatInfo();if(cat){const btn=document.querySelector(`.modal-cat[data-cat="${cat}"]`);if(btn)toggleCat(btn)}}
-function closeLogModal(){document.getElementById('logModal').classList.remove('show')}
+  if(!data.customGoals)data.customGoals=[];
+
+  // Seed default goals on first run
+  if(!data.goalsSeeded){
+    data.customGoals=[
+      {type:'active_days',target:4,category:null,created:new Date().toISOString()},
+      {type:'total_minutes',target:150,category:null,created:new Date().toISOString()},
+      {type:'variety',target:3,category:null,created:new Date().toISOString()},
+      {type:'weekly_xp',target:100,category:null,created:new Date().toISOString()},
+    ];
+    data.goalsSeeded=true;
+    saveStore(data);
+  }
+
+  if(data.customGoals.length===0){
+    c.innerHTML='<div class="empty-state" style="padding:20px"><p style="font-size:13px">No goals yet — tap + to add one!</p></div>';
+    return;
+  }
+
+  const goals=data.customGoals.map((g,i)=>{
+    let current=0;
+    const catActs=g.category?wa.filter(a=>a.category===g.category):wa;
+    const catInfo=g.category?CATEGORIES[g.category]:null;
+
+    if(g.type==='category_count')current=catActs.length;
+    else if(g.type==='category_minutes')current=catActs.reduce((s,a)=>s+a.duration,0);
+    else if(g.type==='total_count')current=wa.length;
+    else if(g.type==='total_minutes')current=wm;
+    else if(g.type==='active_days')current=wd.size;
+    else if(g.type==='variety')current=wc.size;
+    else if(g.type==='weekly_xp')current=wx;
+
+    const typeLabels={
+      category_count:`${catInfo?catInfo.label:''} ${g.target}x this week`,
+      category_minutes:`${g.target} min of ${catInfo?catInfo.label:''} this week`,
+      total_count:`${g.target} workouts this week`,
+      total_minutes:`${g.target} total minutes this week`,
+      active_days:`Active ${g.target} days this week`,
+      variety:`Try ${g.target} different categories`,
+      weekly_xp:`Earn ${g.target} XP this week`
+    };
+    const typeIcons={category_count:'📋',category_minutes:'⏱️',total_count:'📅',total_minutes:'🕐',active_days:'🔥',variety:'🌈',weekly_xp:'⚡'};
+    const typeColors={category_count:catInfo?catInfo.color:'var(--accent)',category_minutes:catInfo?catInfo.color:'var(--yoga)',total_count:'var(--accent)',total_minutes:'var(--yoga)',active_days:'var(--accent2)',variety:'var(--weights-upper)',weekly_xp:'var(--wellness)'};
+
+    return{icon:typeIcons[g.type]||'🎯',title:typeLabels[g.type]||g.type,current:current,target:g.target,color:typeColors[g.type]||'var(--accent)',index:i};
+  });
+
+  c.innerHTML=goals.map(g=>{
+    const pct=Math.min((g.current/g.target)*100,100);
+    const done=g.current>=g.target;
+    return`<div class="goal-card"><div class="goal-header"><div class="goal-title">${g.icon} ${g.title}</div><div class="goal-progress-text">${g.current}/${g.target}${done?' ✅':''}</div><button class="goal-del" onclick="deleteGoal(${g.index})">✕</button></div><div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${pct}%;background:${g.color}"></div></div></div>`;
+  }).join('');
+}
+
+// ─── GOAL MODAL ───
+let selectedGoalType=null;
+function openGoalModal(){
+  document.getElementById('goalModal').classList.add('show');
+  selectedGoalType=null;
+  document.querySelectorAll('.goal-type-opt').forEach(o=>o.classList.remove('selected'));
+  document.getElementById('goalConfigCat').classList.remove('show');
+  document.getElementById('goalTarget').value='';
+  document.getElementById('saveGoalBtn').disabled=true;
+  validateGoal();
+}
+function closeGoalModal(){document.getElementById('goalModal').classList.remove('show')}
+function selectGoalType(el){
+  document.querySelectorAll('.goal-type-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGoalType=el.dataset.type;
+  const needsCat=selectedGoalType==='category_count'||selectedGoalType==='category_minutes';
+  document.getElementById('goalConfigCat').classList.toggle('show',needsCat);
+  const labels={category_minutes:'Target (minutes)',total_minutes:'Target (minutes)',active_days:'Target (days)',variety:'Target (# of categories)',weekly_xp:'Target (XP)'};
+  document.getElementById('goalTargetLabel').textContent=labels[selectedGoalType]||'Target (sessions)';
+  const placeholders={category_minutes:'e.g. 120',total_minutes:'e.g. 200',active_days:'e.g. 5',variety:'e.g. 4',weekly_xp:'e.g. 100'};
+  document.getElementById('goalTarget').placeholder=placeholders[selectedGoalType]||'e.g. 5';
+  validateGoal();
+}
+function validateGoal(){
+  const v=parseInt(document.getElementById('goalTarget').value);
+  document.getElementById('saveGoalBtn').disabled=!(selectedGoalType&&v>0);
+}
+document.getElementById('goalTarget').addEventListener('input',validateGoal);
+function saveGoal(){
+  const target=parseInt(document.getElementById('goalTarget').value);
+  if(!selectedGoalType||!target)return;
+  const needsCat=selectedGoalType==='category_count'||selectedGoalType==='category_minutes';
+  const cat=needsCat?document.getElementById('goalCategory').value:null;
+  if(!data.customGoals)data.customGoals=[];
+  data.customGoals.push({type:selectedGoalType,target:target,category:cat,created:new Date().toISOString()});
+  saveStore(data);
+  closeGoalModal();
+  renderWeeklyGoals();
+  showToast('Goal added! 🎯');
+}
+function deleteGoal(index){
+  if(!confirm('Delete this goal?'))return;
+  data.customGoals.splice(index,1);
+  saveStore(data);
+  renderWeeklyGoals();
+  showToast('Goal removed');
+}
+
+function openLogModal(dateStr,cat){
+  const overlay=document.getElementById('logModal');
+  const modal=overlay.querySelector('.modal');
+  overlay.classList.remove('closing');
+  modal.classList.remove('closing','dragging');
+  modal.style.transform='';
+  overlay.style.background='';
+  overlay.classList.add('show');
+  modal.scrollTop=0;
+  selectedCats=[];selectedDuration=null;editingId=null;
+  document.getElementById('activityName').value='';
+  document.getElementById('activityNotes').value='';
+  document.getElementById('activityDate').value=dateStr||toDateStr(new Date());
+  document.querySelectorAll('.modal-cat').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('saveBtn').disabled=true;
+  document.getElementById('saveBtn').textContent='SAVE ACTIVITY ⚡';
+  document.querySelector('.modal-title').textContent='LOG ACTIVITY';
+  document.querySelector('.modal-subtitle').textContent='Select one or more categories — time splits evenly';
+  updateCatInfo();
+  if(cat){const btn=document.querySelector(`.modal-cat[data-cat="${cat}"]`);if(btn)toggleCat(btn)}
+}
+function editActivity(id){
+  const a=data.activities.find(x=>x.id===id);
+  if(!a)return;
+  const overlay=document.getElementById('logModal');
+  const modal=overlay.querySelector('.modal');
+  overlay.classList.remove('closing');
+  modal.classList.remove('closing','dragging');
+  modal.style.transform='';
+  overlay.style.background='';
+  overlay.classList.add('show');
+  modal.scrollTop=0;
+  editingId=id;
+  selectedCats=[];selectedDuration=null;
+  document.querySelectorAll('.modal-cat').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));
+  // Pre-fill category
+  const catBtn=document.querySelector(`.modal-cat[data-cat="${a.category}"]`);
+  if(catBtn){catBtn.classList.add('selected');selectedCats=[a.category]}
+  // Pre-fill duration
+  const durChips=document.querySelectorAll('.dur-chip');
+  durChips.forEach(ch=>{if(parseInt(ch.textContent)===a.duration){ch.classList.add('selected');selectedDuration=a.duration}});
+  // If duration doesn't match a chip, select closest
+  if(!selectedDuration){selectedDuration=a.duration}
+  document.getElementById('activityName').value=a.name||'';
+  document.getElementById('activityNotes').value=a.notes||'';
+  document.getElementById('activityDate').value=a.date;
+  document.getElementById('saveBtn').disabled=false;
+  document.getElementById('saveBtn').textContent='UPDATE ACTIVITY ✏️';
+  document.querySelector('.modal-title').textContent='EDIT ACTIVITY';
+  document.querySelector('.modal-subtitle').textContent='Change any details below';
+  updateCatInfo();
+}
+function closeLogModal(){
+  const overlay=document.getElementById('logModal');
+  const modal=overlay.querySelector('.modal');
+  modal.classList.add('closing');
+  overlay.classList.add('closing');
+  setTimeout(()=>{overlay.classList.remove('show','closing');modal.classList.remove('closing');modal.style.transform=''},250);
+}
+
+// ─── DRAG TO DISMISS ───
+(function(){
+  const overlay=document.getElementById('logModal');
+  const modal=overlay.querySelector('.modal');
+  let startY=0,currentY=0,isDragging=false;
+
+  function onStart(e){
+    // Only drag if at scroll top or touching the handle
+    if(modal.scrollTop>5)return;
+    const touch=e.touches?e.touches[0]:e;
+    startY=touch.clientY;currentY=startY;isDragging=true;
+    modal.classList.add('dragging');
+  }
+  function onMove(e){
+    if(!isDragging)return;
+    const touch=e.touches?e.touches[0]:e;
+    currentY=touch.clientY;
+    const dy=Math.max(0,currentY-startY);
+    modal.style.transform=`translateY(${dy}px)`;
+    const opacity=Math.max(0,0.7-(dy/500));
+    overlay.style.background=`rgba(0,0,0,${opacity})`;
+    if(dy>10)e.preventDefault();
+  }
+  function onEnd(){
+    if(!isDragging)return;
+    isDragging=false;
+    modal.classList.remove('dragging');
+    const dy=currentY-startY;
+    if(dy>120){closeLogModal()}
+    else{modal.style.transform='';overlay.style.background=''}
+  }
+
+  modal.addEventListener('touchstart',onStart,{passive:true});
+  modal.addEventListener('touchmove',onMove,{passive:false});
+  modal.addEventListener('touchend',onEnd,{passive:true});
+
+  // Swipe back (right swipe) to dismiss
+  let swipeStartX=0,swipeStartY=0;
+  overlay.addEventListener('touchstart',e=>{
+    const t=e.touches[0];swipeStartX=t.clientX;swipeStartY=t.clientY;
+  },{passive:true});
+  overlay.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0];
+    const dx=t.clientX-swipeStartX;
+    const dy=Math.abs(t.clientY-swipeStartY);
+    if(dx>80&&dy<100)closeLogModal();
+  },{passive:true});
+})();
 function toggleCat(el){const cat=el.dataset.cat;if(el.classList.contains('selected')){el.classList.remove('selected');selectedCats=selectedCats.filter(c=>c!==cat)}else{el.classList.add('selected');selectedCats.push(cat)}updateCatInfo();validateForm()}
 function updateCatInfo(){const info=document.getElementById('selectedCatsInfo');if(selectedCats.length>1&&selectedDuration){const pc=Math.round(selectedDuration/selectedCats.length);const lb=selectedCats.map(c=>CATEGORIES[c].label).join(', ');info.textContent=`⏱️ ${selectedDuration} min split → ${pc} min each for: ${lb}`;info.classList.add('show')}else if(selectedCats.length>1){info.textContent=`📋 Selected: ${selectedCats.map(c=>CATEGORIES[c].label).join(', ')} — pick duration to see split`;info.classList.add('show')}else{info.classList.remove('show')}}
 function selectDuration(el,mins){document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedDuration=mins;updateCatInfo();validateForm()}
 function validateForm(){document.getElementById('saveBtn').disabled=!(selectedCats.length>0&&selectedDuration)}
 
-function saveActivity(){if(!selectedCats.length||!selectedDuration)return;const perCat=Math.round(selectedDuration/selectedCats.length);const baseName=document.getElementById('activityName').value;const date=document.getElementById('activityDate').value;const notes=document.getElementById('activityNotes').value;const isCombo=selectedCats.length>1;let totalXP=0;const comboId=isCombo?Date.now().toString(36):null;
+function saveActivity(){if(!selectedCats.length||!selectedDuration)return;
+// EDIT MODE — update existing activity
+if(editingId){
+  const idx=data.activities.findIndex(a=>a.id===editingId);
+  if(idx===-1)return;
+  const cat=selectedCats[0];
+  const ci=CATEGORIES[cat];
+  const name=document.getElementById('activityName').value||ci.label;
+  data.activities[idx].category=cat;
+  data.activities[idx].name=name;
+  data.activities[idx].duration=selectedDuration;
+  data.activities[idx].date=document.getElementById('activityDate').value;
+  data.activities[idx].notes=document.getElementById('activityNotes').value;
+  data.activities[idx].xp=calcXP(selectedDuration);
+  saveStore(data);closeLogModal();editingId=null;
+  showToast('Activity updated ✏️');
+  renderRecent();renderStreakWeek();renderWeeklyGoals();
+  if(selectedCalDate)showDay(selectedCalDate);
+  return;
+}
+// NEW MODE
+const perCat=Math.round(selectedDuration/selectedCats.length);const baseName=document.getElementById('activityName').value;const date=document.getElementById('activityDate').value;const notes=document.getElementById('activityNotes').value;const isCombo=selectedCats.length>1;let totalXP=0;const comboId=isCombo?Date.now().toString(36):null;
 selectedCats.forEach((cat,i)=>{const xp=calcXP(perCat);totalXP+=xp;const ci=CATEGORIES[cat];const name=baseName||(isCombo?ci.label+' (combo)':ci.label);data.activities.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)+i,category:cat,name:name,duration:perCat,date:date,notes:notes,xp:xp,logged:new Date().toISOString(),comboWith:isCombo?comboId:null})});
 const streak=getStreak(data);let bonus=0;if(streak>=30)bonus=15;else if(streak>=14)bonus=10;else if(streak>=7)bonus=5;else if(streak>=3)bonus=2;if(bonus>0){totalXP+=bonus;data.activities[data.activities.length-1].xp+=bonus}
 const newA=[];ACHIEVEMENTS.forEach(a=>{if(!data.unlockedAchievements.includes(a.id)&&a.check(data)){data.unlockedAchievements.push(a.id);newA.push(a)}});
@@ -386,14 +708,14 @@ if(lvlUp)setTimeout(()=>showToast(`🎉 LEVEL UP! Level ${lA.level} — ${lA.nam
 if(newA.length)newA.forEach((a,i)=>setTimeout(()=>showToast(`🏆 ${a.name} — ${a.desc}`,'achievement'),3500+i*2000));
 renderRecent();renderStreakWeek();renderWeeklyGoals()}
 
-function renderRecent(){const l=document.getElementById('recentList');const r=[...data.activities].reverse().slice(0,10);if(!r.length){l.innerHTML='<div class="empty-state"><span class="empty-icon">🏋️</span><p>No activities yet. Tap a category to start!</p></div>';return}l.innerHTML=r.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="recent-item"><div class="recent-icon" style="background:${c.color}22">${c.icon}</div><div class="recent-info"><div class="recent-title">${a.name}${a.comboWith?' 🔀':''}</div><div class="recent-meta">${a.date} · ${a.duration} min</div></div><div class="recent-xp">+${a.xp} XP</div></div>`}).join('')}
+function renderRecent(){const l=document.getElementById('recentList');const r=[...data.activities].reverse().slice(0,10);if(!r.length){l.innerHTML='<div class="empty-state"><span class="empty-icon">🏋️</span><p>No activities yet. Tap a category to start!</p></div>';return}l.innerHTML=r.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="recent-item" onclick="editActivity('${a.id}')"><div class="recent-icon" style="background:${c.color}22">${c.icon}</div><div class="recent-info"><div class="recent-title">${a.name}${a.comboWith?' 🔀':''}</div><div class="recent-meta">${a.date} · ${a.duration} min</div></div><div class="recent-xp">+${a.xp} XP</div></div>`}).join('')}
 
 function changeMonth(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--}if(calMonth>11){calMonth=0;calYear++}selectedCalDate=null;renderCalendar()}
 function renderCalendar(){const mn=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];document.getElementById('calMonth').textContent=mn[calMonth]+' '+calYear;const g=document.getElementById('calGrid');const dl=['S','M','T','W','T','F','S'];let h=dl.map(d=>`<div class="cal-day-label">${d}</div>`).join('');const fd=new Date(calYear,calMonth,1).getDay();const dim=new Date(calYear,calMonth+1,0).getDate();const today=toDateStr(new Date());const dc={};data.activities.forEach(a=>{if(a.date.startsWith(calYear+'-'+String(calMonth+1).padStart(2,'0')))dc[a.date]=(dc[a.date]||0)+1});for(let i=0;i<fd;i++)h+='<div class="cal-day empty"></div>';for(let d=1;d<=dim;d++){const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const cnt=dc[ds]||0;let cls='cal-day';if(ds===today)cls+=' today';if(ds===selectedCalDate)cls+=' selected-date';if(cnt>0){cls+=' has-activity';if(cnt>=4)cls+=' intensity-4';else if(cnt>=3)cls+=' intensity-3';else if(cnt>=2)cls+=' intensity-2';else cls+=' intensity-1'}h+=`<div class="${cls}" onclick="selectCalDay('${ds}')">${d}</div>`}g.innerHTML=h;updateCalBanner()}
 function selectCalDay(ds){selectedCalDate=ds;renderCalendar();showDay(ds)}
 function updateCalBanner(){const b=document.getElementById('calSelectedBanner');if(selectedCalDate){const d=new Date(selectedCalDate+'T12:00:00');document.getElementById('calSelectedLabel').textContent='📅 '+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});b.classList.add('show')}else{b.classList.remove('show')}}
 function addForSelectedDate(){if(selectedCalDate)openLogModal(selectedCalDate)}
-function showDay(ds){const acts=data.activities.filter(a=>a.date===ds);const d=document.getElementById('dayDetail');if(!acts.length){d.innerHTML='<div class="empty-state"><span class="empty-icon">😴</span><p>No activities on this day</p></div>';return}d.innerHTML=acts.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="day-activity"><div class="day-activity-icon">${c.icon}</div><div class="day-activity-info"><div class="day-activity-name">${a.name}${a.comboWith?' 🔀':''}</div><div class="day-activity-meta">${a.duration} min · +${a.xp} XP${a.notes?' · '+a.notes:''}</div></div><button class="day-activity-del" onclick="deleteActivity('${a.id}')">✕</button></div>`}).join('')}
+function showDay(ds){const acts=data.activities.filter(a=>a.date===ds);const d=document.getElementById('dayDetail');if(!acts.length){d.innerHTML='<div class="empty-state"><span class="empty-icon">😴</span><p>No activities on this day</p></div>';return}d.innerHTML=acts.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="day-activity"><div class="day-activity-icon">${c.icon}</div><div class="day-activity-info"><div class="day-activity-name">${a.name}${a.comboWith?' 🔀':''}</div><div class="day-activity-meta">${a.duration} min · +${a.xp} XP${a.notes?' · '+a.notes:''}</div></div><div class="day-activity-actions"><button class="day-activity-edit" onclick="editActivity('${a.id}')">✏️</button><button class="day-activity-del" onclick="deleteActivity('${a.id}')">✕</button></div></div>`}).join('')}
 function deleteActivity(id){if(!confirm('Delete this activity?'))return;data.activities=data.activities.filter(a=>a.id!==id);saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();renderCalendar();if(selectedCalDate)showDay(selectedCalDate);showToast('Activity deleted')}
 
 function setStatsPeriod(p,btn){statsPeriod=p;document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderStats()}
@@ -406,7 +728,7 @@ function exportToCalendar(){if(!data.activities.length){showToast('No activities
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download='reach-backup-'+toDateStr(new Date())+'.json';l.click();URL.revokeObjectURL(u);showToast('Data exported!')}
 function importData(){document.getElementById('importFile').click()}
 function handleImport(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const imp=JSON.parse(ev.target.result);if(imp.activities){data=imp;saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();showToast('Data imported!')}else showToast('Invalid file')}catch(err){showToast('Error reading file')}};r.readAsText(f);e.target.value=''}
-function clearAllData(){if(!confirm('Delete ALL data? Cannot be undone!'))return;data={activities:[],unlockedAchievements:[],bestStreak:0};saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();showToast('All data cleared')}
+function clearAllData(){if(!confirm('Delete ALL data? Cannot be undone!'))return;data={activities:[],unlockedAchievements:[],bestStreak:0,customGoals:[],goalsSeeded:false};saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();showToast('All data cleared')}
 
 renderRecent();renderStreakWeek();renderWeeklyGoals();
 
