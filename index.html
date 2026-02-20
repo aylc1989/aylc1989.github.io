@@ -229,8 +229,8 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .collapse-header { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; }
 .collapse-header .section-title { margin:0; }
 .collapse-arrow { color:var(--text-dim); font-size:12px; padding:4px 8px; background:var(--surface2); border-radius:8px; }
-.collapse-body { max-height:140px; overflow:hidden; transition:max-height .4s ease; position:relative; }
-.collapse-body::after { content:''; position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(to bottom,transparent,var(--bg)); pointer-events:none; transition:opacity .3s; }
+.collapse-body { max-height:115px; overflow:hidden; transition:max-height .4s ease; position:relative; }
+.collapse-body::after { content:''; position:absolute; bottom:0; left:0; right:0; height:30px; background:linear-gradient(to bottom,transparent,var(--bg)); pointer-events:none; transition:opacity .3s; }
 .collapse-body.open { max-height:4000px; }
 .collapse-body.open::after { opacity:0; }
 .pr-list { margin-bottom:12px; }
