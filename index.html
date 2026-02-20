@@ -489,7 +489,7 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">LOG ACTIVITY</div>
-    <div class="modal-subtitle">Select one or more categories — time splits evenly</div>
+    <div class="modal-subtitle">Select one or more categories</div>
     <div class="modal-categories">
       <button class="modal-cat" style="--cat-color:var(--cardio)" data-cat="cardio" onclick="toggleCat(this)"><span class="mc-icon">🏃</span>Cardio</button>
       <button class="modal-cat" style="--cat-color:var(--weights-upper)" data-cat="weights-upper" onclick="toggleCat(this)"><span class="mc-icon">💪</span>Upper Body</button>
@@ -587,6 +587,9 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 
 <script>
 const STORAGE_KEY='reach_data';
+// Helper: get all categories for an activity (supports old single + new multi)
+function getCats(a){return a.categories||[a.category];}
+function hasCat(a,cat){return getCats(a).includes(cat);}
 const CATEGORIES={'cardio':{icon:'🏃',label:'Cardio',color:'#ff5e3a',group:'cardio'},'weights-upper':{icon:'💪',label:'Upper Body',color:'#7c5cff',group:'weights'},'weights-lower':{icon:'🦵',label:'Lower Body',color:'#5ca0ff',group:'weights'},'yoga':{icon:'🧘',label:'Yoga & Stretch',color:'#2dd4a8',group:'wellness'},'wellness':{icon:'🧠',label:'Wellness',color:'#ffc233',group:'wellness'},'other':{icon:'🎯',label:'Other',color:'#e0e0e0',group:'other'}};
 const LEVELS=[{name:'Beginner',xp:0},{name:'Starter',xp:100},{name:'Mover',xp:250},{name:'Active',xp:450},{name:'Committed',xp:700},{name:'Dedicated',xp:1000},{name:'Disciplined',xp:1400},{name:'Warrior',xp:1900},{name:'Powerhouse',xp:2500},{name:'Champion',xp:3200},{name:'Elite',xp:4000},{name:'Legend',xp:5000},{name:'Mythic',xp:6500},{name:'Transcended',xp:8000},{name:'Immortal',xp:10000}];
 const MILESTONES=[1,10,25,50,100,250,500];
@@ -625,15 +628,15 @@ const ACHIEVEMENTS=[
 {id:'min5000',icon:'⏱️',name:'Time Master',desc:'5,000 total minutes',check:d=>d.activities.reduce((s,a)=>s+a.duration,0)>=5000},
 {id:'min10k',icon:'⏱️',name:'Time Titan',desc:'10,000 total minutes',check:d=>d.activities.reduce((s,a)=>s+a.duration,0)>=10000},
 // Category mastery
-{id:'allcats',icon:'🌈',name:'Well Rounded',desc:'Try all 6 categories',check:d=>new Set(d.activities.map(a=>a.category)).size>=6},
-{id:'combo',icon:'🔀',name:'Combo Master',desc:'Multi-category session',check:d=>d.activities.some(a=>a.comboWith)},
-{id:'balanced',icon:'⚖️',name:'Perfect Balance',desc:'10+ upper AND lower',check:d=>{const u=d.activities.filter(a=>a.category==='weights-upper').length;const l=d.activities.filter(a=>a.category==='weights-lower').length;return u>=10&&l>=10}},
-{id:'cardio10',icon:'🏃',name:'Cardio Crusher',desc:'10 cardio sessions',check:d=>d.activities.filter(a=>a.category==='cardio').length>=10},
-{id:'cardio50',icon:'🏃',name:'Cardio King',desc:'50 cardio sessions',check:d=>d.activities.filter(a=>a.category==='cardio').length>=50},
-{id:'upper10',icon:'💪',name:'Gun Show',desc:'10 upper body sessions',check:d=>d.activities.filter(a=>a.category==='weights-upper').length>=10},
-{id:'lower10',icon:'🦵',name:'Leg Day Lover',desc:'10 lower body sessions',check:d=>d.activities.filter(a=>a.category==='weights-lower').length>=10},
-{id:'yoga10',icon:'🧘',name:'Zen Master',desc:'10 yoga sessions',check:d=>d.activities.filter(a=>a.category==='yoga').length>=10},
-{id:'wellness10',icon:'🧠',name:'Mind Over Matter',desc:'10 wellness sessions',check:d=>d.activities.filter(a=>a.category==='wellness').length>=10},
+{id:'allcats',icon:'🌈',name:'Well Rounded',desc:'Try all 6 categories',check:d=>{const s=new Set();d.activities.forEach(a=>getCats(a).forEach(c=>s.add(c)));return s.size>=6}},
+{id:'combo',icon:'🔀',name:'Combo Master',desc:'Multi-category session',check:d=>d.activities.some(a=>getCats(a).length>1)},
+{id:'balanced',icon:'⚖️',name:'Perfect Balance',desc:'10+ upper AND lower',check:d=>{const u=d.activities.filter(a=>hasCat(a,'weights-upper')).length;const l=d.activities.filter(a=>hasCat(a,'weights-lower')).length;return u>=10&&l>=10}},
+{id:'cardio10',icon:'🏃',name:'Cardio Crusher',desc:'10 cardio sessions',check:d=>d.activities.filter(a=>hasCat(a,'cardio')).length>=10},
+{id:'cardio50',icon:'🏃',name:'Cardio King',desc:'50 cardio sessions',check:d=>d.activities.filter(a=>hasCat(a,'cardio')).length>=50},
+{id:'upper10',icon:'💪',name:'Gun Show',desc:'10 upper body sessions',check:d=>d.activities.filter(a=>hasCat(a,'weights-upper')).length>=10},
+{id:'lower10',icon:'🦵',name:'Leg Day Lover',desc:'10 lower body sessions',check:d=>d.activities.filter(a=>hasCat(a,'weights-lower')).length>=10},
+{id:'yoga10',icon:'🧘',name:'Zen Master',desc:'10 yoga sessions',check:d=>d.activities.filter(a=>hasCat(a,'yoga')).length>=10},
+{id:'wellness10',icon:'🧠',name:'Mind Over Matter',desc:'10 wellness sessions',check:d=>d.activities.filter(a=>hasCat(a,'wellness')).length>=10},
 // Day-of-week & time
 {id:'weekend',icon:'🎉',name:'Weekend Warrior',desc:'Sat & Sun same week',check:d=>checkWeekendWarrior(d)},
 {id:'earlybird',icon:'🌅',name:'Early Bird',desc:'Log before 7 AM',check:d=>d.activities.some(a=>new Date(a.logged).getHours()<7)},
@@ -643,7 +646,7 @@ const ACHIEVEMENTS=[
 // Multi-session & special
 {id:'doubleup',icon:'✌️',name:'Double Up',desc:'2 workouts in one day',check:d=>{const dc={};d.activities.forEach(a=>dc[a.date]=(dc[a.date]||0)+1);return Object.values(dc).some(v=>v>=2)}},
 {id:'tripleup',icon:'🤯',name:'Triple Threat',desc:'3 workouts in one day',check:d=>{const dc={};d.activities.forEach(a=>dc[a.date]=(dc[a.date]||0)+1);return Object.values(dc).some(v=>v>=3)}},
-{id:'variety',icon:'🎨',name:'Variety Pack',desc:'3 categories in one day',check:d=>{const dc={};d.activities.forEach(a=>{if(!dc[a.date])dc[a.date]=new Set();dc[a.date].add(a.category)});return Object.values(dc).some(s=>s.size>=3)}},
+{id:'variety',icon:'🎨',name:'Variety Pack',desc:'3 categories in one day',check:d=>{const dc={};d.activities.forEach(a=>{if(!dc[a.date])dc[a.date]=new Set();getCats(a).forEach(c=>dc[a.date].add(c))});return Object.values(dc).some(s=>s.size>=3)}},
 {id:'newyear',icon:'🎆',name:'New Year Grind',desc:'Log on Jan 1st',check:d=>d.activities.some(a=>a.date.endsWith('-01-01'))},
 {id:'valentine',icon:'❤️',name:'Self Love',desc:'Log on Valentine\'s Day',check:d=>d.activities.some(a=>a.date.endsWith('-02-14'))},
 {id:'halloween',icon:'🎃',name:'Spooky Sweat',desc:'Log on Halloween',check:d=>d.activities.some(a=>a.date.endsWith('-10-31'))},
@@ -681,7 +684,7 @@ function renderWeeklyGoals(){
   const wd=new Set(wa.map(a=>a.date));
   const wm=wa.reduce((s,a)=>s+a.duration,0);
   const wx=wa.reduce((s,a)=>s+(a.xp||0),0);
-  const wc=new Set(wa.map(a=>a.category));
+  const wc=new Set();wa.forEach(a=>getCats(a).forEach(c=>wc.add(c)));
 
   if(!data.customGoals)data.customGoals=[];
 
@@ -704,7 +707,7 @@ function renderWeeklyGoals(){
 
   const goals=data.customGoals.map((g,i)=>{
     let current=0;
-    const catActs=g.category?wa.filter(a=>a.category===g.category):wa;
+    const catActs=g.category?wa.filter(a=>hasCat(a,g.category)):wa;
     const catInfo=g.category?CATEGORIES[g.category]:null;
 
     if(g.type==='category_count')current=catActs.length;
@@ -804,7 +807,7 @@ function openLogModal(dateStr,cat){
   document.getElementById('saveBtn').disabled=true;
   document.getElementById('saveBtn').textContent='SAVE ACTIVITY ⚡';
   document.querySelector('.modal-title').textContent='LOG ACTIVITY';
-  document.querySelector('.modal-subtitle').textContent='Select one or more categories — time splits evenly';
+  document.querySelector('.modal-subtitle').textContent='Select one or more categories';
   updateCatInfo();
   if(cat){const btn=document.querySelector(`.modal-cat[data-cat="${cat}"]`);if(btn)toggleCat(btn)}
 }
@@ -823,9 +826,12 @@ function editActivity(id){
   selectedCats=[];selectedDuration=null;
   document.querySelectorAll('.modal-cat').forEach(c=>c.classList.remove('selected'));
   document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));
-  // Pre-fill category
-  const catBtn=document.querySelector(`.modal-cat[data-cat="${a.category}"]`);
-  if(catBtn){catBtn.classList.add('selected');selectedCats=[a.category]}
+  // Pre-fill category(s)
+  const cats=getCats(a);
+  cats.forEach(cat=>{
+    const catBtn=document.querySelector(`.modal-cat[data-cat="${cat}"]`);
+    if(catBtn){catBtn.classList.add('selected');selectedCats.push(cat)}
+  });
   // Pre-fill duration
   const durChips=document.querySelectorAll('.dur-chip');
   durChips.forEach(ch=>{if(parseInt(ch.textContent)===a.duration){ch.classList.add('selected');selectedDuration=a.duration}});
@@ -911,7 +917,7 @@ function closeLogModal(instant){
   },{passive:true});
 })();
 function toggleCat(el){const cat=el.dataset.cat;if(el.classList.contains('selected')){el.classList.remove('selected');selectedCats=selectedCats.filter(c=>c!==cat)}else{el.classList.add('selected');selectedCats.push(cat)}updateCatInfo();validateForm()}
-function updateCatInfo(){const info=document.getElementById('selectedCatsInfo');if(selectedCats.length>1&&selectedDuration){const pc=Math.round(selectedDuration/selectedCats.length);const lb=selectedCats.map(c=>CATEGORIES[c].label).join(', ');info.textContent=`⏱️ ${selectedDuration} min split → ${pc} min each for: ${lb}`;info.classList.add('show')}else if(selectedCats.length>1){info.textContent=`📋 Selected: ${selectedCats.map(c=>CATEGORIES[c].label).join(', ')} — pick duration to see split`;info.classList.add('show')}else{info.classList.remove('show')}}
+function updateCatInfo(){const info=document.getElementById('selectedCatsInfo');if(selectedCats.length>1){const lb=selectedCats.map(c=>CATEGORIES[c].label).join(' + ');info.textContent=`📋 ${lb}`;info.classList.add('show')}else{info.classList.remove('show')}}
 function selectDuration(el,mins){document.querySelectorAll('.dur-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedDuration=mins;updateCatInfo();validateForm()}
 function validateForm(){document.getElementById('saveBtn').disabled=!(selectedCats.length>0&&selectedDuration)}
 
@@ -924,6 +930,7 @@ if(editingId){
   const ci=CATEGORIES[cat];
   const name=document.getElementById('activityName').value||ci.label;
   data.activities[idx].category=cat;
+  data.activities[idx].categories=[...selectedCats];
   data.activities[idx].name=name;
   data.activities[idx].duration=selectedDuration;
   data.activities[idx].date=document.getElementById('activityDate').value;
@@ -936,8 +943,11 @@ if(editingId){
   return;
 }
 // NEW MODE
-const perCat=Math.round(selectedDuration/selectedCats.length);const baseName=document.getElementById('activityName').value;const date=document.getElementById('activityDate').value;const notes=document.getElementById('activityNotes').value;const isCombo=selectedCats.length>1;let totalXP=0;const comboId=isCombo?Date.now().toString(36):null;
-selectedCats.forEach((cat,i)=>{const xp=calcXP(perCat);totalXP+=xp;const ci=CATEGORIES[cat];const name=baseName||(isCombo?ci.label+' (combo)':ci.label);data.activities.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)+i,category:cat,name:name,duration:perCat,date:date,notes:notes,xp:xp,logged:new Date().toISOString(),comboWith:isCombo?comboId:null})});
+const baseName=document.getElementById('activityName').value;const date=document.getElementById('activityDate').value;const notes=document.getElementById('activityNotes').value;const isCombo=selectedCats.length>1;
+const xp=calcXP(selectedDuration);const ci=CATEGORIES[selectedCats[0]];
+const name=baseName||(isCombo?selectedCats.map(c=>CATEGORIES[c].label).join(' + '):ci.label);
+data.activities.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),category:selectedCats[0],categories:[...selectedCats],name:name,duration:selectedDuration,date:date,notes:notes,xp:xp,logged:new Date().toISOString()});
+let totalXP=xp;
 const streak=getStreak(data);let bonus=0;if(streak>=30)bonus=15;else if(streak>=14)bonus=10;else if(streak>=7)bonus=5;else if(streak>=3)bonus=2;if(bonus>0){totalXP+=bonus;data.activities[data.activities.length-1].xp+=bonus}
 const newA=[];ACHIEVEMENTS.forEach(a=>{if(!data.unlockedAchievements.includes(a.id)&&a.check(data)){data.unlockedAchievements.push(a.id);newA.push(a)}});
 const xpB=getTotalXP(data)-totalXP;const lB=getLevel(xpB);const lA=getLevel(getTotalXP(data));const lvlUp=lA.level>lB.level;
@@ -947,22 +957,22 @@ if(lvlUp)setTimeout(()=>showToast(`🎉 LEVEL UP! Level ${lA.level} — ${lA.nam
 if(newA.length)newA.forEach((a,i)=>setTimeout(()=>showToast(`🏆 ${a.name} — ${a.desc}`,'achievement'),3500+i*2000));
 renderRecent();renderStreakWeek();renderWeeklyGoals()}
 
-function renderRecent(){const l=document.getElementById('recentList');const r=[...data.activities].reverse().slice(0,10);if(!r.length){l.innerHTML='<div class="empty-state"><span class="empty-icon">🏋️</span><p>No activities yet. Tap a category to start!</p></div>';return}l.innerHTML=r.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="recent-item" onclick="editActivity('${a.id}')"><div class="recent-icon" style="background:${c.color}22">${c.icon}</div><div class="recent-info"><div class="recent-title">${a.name}${a.comboWith?' 🔀':''}</div><div class="recent-meta">${a.date} · ${a.duration} min</div></div><div class="recent-xp">+${a.xp} XP</div></div>`}).join('')}
+function renderRecent(){const l=document.getElementById('recentList');const r=[...data.activities].reverse().slice(0,10);if(!r.length){l.innerHTML='<div class="empty-state"><span class="empty-icon">🏋️</span><p>No activities yet. Tap a category to start!</p></div>';return}l.innerHTML=r.map(a=>{const cats=getCats(a);const c=CATEGORIES[cats[0]]||CATEGORIES.other;const icons=cats.map(k=>(CATEGORIES[k]||CATEGORIES.other).icon).join('');return`<div class="recent-item" onclick="editActivity('${a.id}')"><div class="recent-icon" style="background:${c.color}22">${icons}</div><div class="recent-info"><div class="recent-title">${a.name}</div><div class="recent-meta">${a.date} · ${a.duration} min</div></div><div class="recent-xp">+${a.xp} XP</div></div>`}).join('')}
 
 function changeMonth(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--}if(calMonth>11){calMonth=0;calYear++}selectedCalDate=null;renderCalendar();document.getElementById('dayDetail').innerHTML='<div class="empty-state"><span class="empty-icon">📅</span><p>Tap a day to see activities</p></div>'}
 function renderCalendar(){const mn=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];document.getElementById('calMonth').textContent=mn[calMonth]+' '+calYear;const g=document.getElementById('calGrid');const dl=['S','M','T','W','T','F','S'];let h=dl.map(d=>`<div class="cal-day-label">${d}</div>`).join('');const fd=new Date(calYear,calMonth,1).getDay();const dim=new Date(calYear,calMonth+1,0).getDate();const today=toDateStr(new Date());const dc={};data.activities.forEach(a=>{if(a.date.startsWith(calYear+'-'+String(calMonth+1).padStart(2,'0')))dc[a.date]=(dc[a.date]||0)+1});for(let i=0;i<fd;i++)h+='<div class="cal-day empty"></div>';for(let d=1;d<=dim;d++){const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const cnt=dc[ds]||0;let cls='cal-day';if(ds===today)cls+=' today';if(ds===selectedCalDate)cls+=' selected-date';if(cnt>0){cls+=' has-activity';if(cnt>=4)cls+=' intensity-4';else if(cnt>=3)cls+=' intensity-3';else if(cnt>=2)cls+=' intensity-2';else cls+=' intensity-1'}h+=`<div class="${cls}" onclick="selectCalDay('${ds}')">${d}</div>`}g.innerHTML=h;updateCalBanner()}
 function selectCalDay(ds){selectedCalDate=ds;renderCalendar();showDay(ds)}
 function updateCalBanner(){const b=document.getElementById('calSelectedBanner');if(selectedCalDate){const d=new Date(selectedCalDate+'T12:00:00');document.getElementById('calSelectedLabel').textContent='📅 '+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});b.classList.add('show')}else{b.classList.remove('show')}}
 function addForSelectedDate(){if(selectedCalDate)openLogModal(selectedCalDate)}
-function showDay(ds){const acts=data.activities.filter(a=>a.date===ds);const d=document.getElementById('dayDetail');if(!acts.length){d.innerHTML='<div class="empty-state"><span class="empty-icon">😴</span><p>No activities on this day</p></div>';return}d.innerHTML=acts.map(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;return`<div class="day-activity"><div class="day-activity-icon">${c.icon}</div><div class="day-activity-info"><div class="day-activity-name">${a.name}${a.comboWith?' 🔀':''}</div><div class="day-activity-meta">${a.duration} min · +${a.xp} XP${a.notes?' · '+a.notes:''}</div></div><div class="day-activity-actions"><button class="day-activity-edit" onclick="editActivity('${a.id}')">✏️</button><button class="day-activity-del" onclick="deleteActivity('${a.id}')">✕</button></div></div>`}).join('')}
+function showDay(ds){const acts=data.activities.filter(a=>a.date===ds);const d=document.getElementById('dayDetail');if(!acts.length){d.innerHTML='<div class="empty-state"><span class="empty-icon">😴</span><p>No activities on this day</p></div>';return}d.innerHTML=acts.map(a=>{const cats=getCats(a);const icons=cats.map(k=>(CATEGORIES[k]||CATEGORIES.other).icon).join('');return`<div class="day-activity"><div class="day-activity-icon">${icons}</div><div class="day-activity-info"><div class="day-activity-name">${a.name}</div><div class="day-activity-meta">${a.duration} min · +${a.xp} XP${a.notes?' · '+a.notes:''}</div></div><div class="day-activity-actions"><button class="day-activity-edit" onclick="editActivity('${a.id}')">✏️</button><button class="day-activity-del" onclick="deleteActivity('${a.id}')">✕</button></div></div>`}).join('')}
 function deleteActivity(id){if(!confirm('Delete this activity?'))return;data.activities=data.activities.filter(a=>a.id!==id);saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();renderCalendar();if(selectedCalDate)showDay(selectedCalDate);showToast('Activity deleted')}
 
 function setStatsPeriod(p,btn){statsPeriod=p;document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderStats()}
 function getFilteredActivities(){const n=new Date();if(statsPeriod==='week')return data.activities.filter(a=>new Date(a.date)>=new Date(n.getTime()-7*864e5));if(statsPeriod==='month')return data.activities.filter(a=>new Date(a.date)>=new Date(n.getTime()-30*864e5));return[...data.activities]}
 function renderStats(){const f=getFilteredActivities();const tm=f.reduce((s,a)=>s+a.duration,0);document.getElementById('statWorkouts').textContent=f.length;document.getElementById('statMinutes').textContent=tm;document.getElementById('statStreak').textContent=getStreak(data);document.getElementById('statBestStreak').textContent=data.bestStreak||getStreak(data);document.getElementById('statTotalXP').textContent=getTotalXP(data);if(data.activities.length>0){const dates=data.activities.map(a=>new Date(a.date));const earliest=new Date(Math.min(...dates));const weeks=Math.max(1,Math.ceil((Date.now()-earliest.getTime())/(7*864e5)));document.getElementById('statAvgPerWeek').textContent=Math.round(data.activities.length/weeks*10)/10}else{document.getElementById('statAvgPerWeek').textContent='0'}
 // Donut chart
-const cc={};Object.keys(CATEGORIES).forEach(k=>cc[k]=0);f.forEach(a=>cc[a.category]=(cc[a.category]||0)+1);
-const total=f.length||1;const entries=Object.entries(CATEGORIES);
+const cc={};Object.keys(CATEGORIES).forEach(k=>cc[k]=0);f.forEach(a=>getCats(a).forEach(k=>cc[k]=(cc[k]||0)+1));
+const totalCatCount=Object.values(cc).reduce((s,v)=>s+v,0)||1;const entries=Object.entries(CATEGORIES);
 const size=170,cx=size/2,cy=size/2,r=64,sw=22;
 let segments='';let offset=0;
 const catData=entries.map(([k,c])=>({key:k,cat:c,count:cc[k]||0})).filter(d=>d.count>0);
@@ -971,7 +981,7 @@ if(catData.length===0){
 } else {
   const circ=2*Math.PI*r;
   catData.forEach(d=>{
-    const pct=d.count/total;
+    const pct=d.count/totalCatCount;
     const dash=pct*circ;
     const gap=circ-dash;
     segments+=`<circle class="segment" data-cat="${d.key}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.cat.color}" stroke-width="${sw}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-offset}" stroke-linecap="round" style="transition:stroke-dasharray .6s,stroke-dashoffset .6s"/>`;
@@ -986,7 +996,7 @@ document.getElementById('breakdownContainer').innerHTML=`<div class="donut-conta
 document.querySelectorAll('#donutSvg .segment').forEach(seg=>{
   seg.addEventListener('click',()=>highlightDonut(seg.dataset.cat));
 });
-document.getElementById('balUpper').textContent=f.filter(a=>a.category==='weights-upper').length;document.getElementById('balLower').textContent=f.filter(a=>a.category==='weights-lower').length;document.getElementById('balCardio').textContent=f.filter(a=>a.category==='cardio').length;document.getElementById('balWellness').textContent=f.filter(a=>['yoga','wellness'].includes(a.category)).length}
+document.getElementById('balUpper').textContent=f.filter(a=>hasCat(a,'weights-upper')).length;document.getElementById('balLower').textContent=f.filter(a=>hasCat(a,'weights-lower')).length;document.getElementById('balCardio').textContent=f.filter(a=>hasCat(a,'cardio')).length;document.getElementById('balWellness').textContent=f.filter(a=>hasCat(a,'yoga')||hasCat(a,'wellness')).length}
 
 let activeDonutCat=null;
 function highlightDonut(cat){
@@ -1007,7 +1017,7 @@ function highlightDonut(cat){
   activeDonutCat=cat;
   const c=CATEGORIES[cat];if(!c)return;
   const f=getFilteredActivities();
-  const catActs=f.filter(a=>a.category===cat);
+  const catActs=f.filter(a=>hasCat(a,cat));
   const cnt=catActs.length;
   const mins=catActs.reduce((s,a)=>s+a.duration,0);
   // Highlight SVG
@@ -1135,7 +1145,7 @@ function renderPRs(){
   list.innerHTML=html;
 }
 
-function exportToCalendar(){if(!data.activities.length){showToast('No activities to export');return}let ics='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//REACH//Workout Tracker//EN\nCALSCALE:GREGORIAN\n';data.activities.forEach(a=>{const c=CATEGORIES[a.category]||CATEGORIES.other;ics+=`BEGIN:VEVENT\nDTSTART;VALUE=DATE:${a.date.replace(/-/g,'')}\nDTEND;VALUE=DATE:${a.date.replace(/-/g,'')}\nSUMMARY:${c.icon} ${a.name} (${a.duration} min)\nDESCRIPTION:Category: ${c.label}\\nDuration: ${a.duration} min\\nXP: ${a.xp}${a.notes?'\\nNotes: '+a.notes:''}\nUID:${a.id}@reach\nEND:VEVENT\n`});ics+='END:VCALENDAR';const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download='reach-workouts.ics';l.click();URL.revokeObjectURL(u);showToast('Calendar file downloaded!')}
+function exportToCalendar(){if(!data.activities.length){showToast('No activities to export');return}let ics='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//REACH//Workout Tracker//EN\nCALSCALE:GREGORIAN\n';data.activities.forEach(a=>{const cats=getCats(a);const icons=cats.map(k=>(CATEGORIES[k]||CATEGORIES.other).icon).join('');const labels=cats.map(k=>(CATEGORIES[k]||CATEGORIES.other).label).join(', ');ics+=`BEGIN:VEVENT\nDTSTART;VALUE=DATE:${a.date.replace(/-/g,'')}\nDTEND;VALUE=DATE:${a.date.replace(/-/g,'')}\nSUMMARY:${icons} ${a.name} (${a.duration} min)\nDESCRIPTION:Category: ${labels}\\nDuration: ${a.duration} min\\nXP: ${a.xp}${a.notes?'\\nNotes: '+a.notes:''}\nUID:${a.id}@reach\nEND:VEVENT\n`});ics+='END:VCALENDAR';const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download='reach-workouts.ics';l.click();URL.revokeObjectURL(u);showToast('Calendar file downloaded!')}
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download='reach-backup-'+toDateStr(new Date())+'.json';l.click();URL.revokeObjectURL(u);showToast('Data exported!')}
 function importData(){document.getElementById('importFile').click()}
 function handleImport(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const imp=JSON.parse(ev.target.result);if(imp.activities){data=imp;saveStore(data);renderRecent();renderStreakWeek();renderWeeklyGoals();showToast('Data imported!')}else showToast('Invalid file')}catch(err){showToast('Error reading file')}};r.readAsText(f);e.target.value=''}
